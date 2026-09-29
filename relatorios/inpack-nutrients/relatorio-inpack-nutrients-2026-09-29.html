@@ -1,0 +1,457 @@
+<title>InPack Nutrients Audit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* PALETTE IS AN ASSUMPTION. The three inpacknutrients.com domains were blocked for our tools, so no CSS was read.
+   Swap the three lines below when the real brand hex codes arrive. Layout: fixed side nav on desktop, single column on phone. */
+:root{
+  --accent:#0F5FBF;          /* assumed brand blue (pharmacy + sport) */
+  --accent-ink:#ffffff;      /* text on accent */
+  --accent-soft:#E4EEFA;     /* tint for callouts */
+  --bg:#F7F8FA; --surface:#FFFFFF; --fg:#16202B; --muted:#5A6675; --line:#D9DFE7;
+  --bad:#B42318; --bad-soft:#FBEAE8; --warn:#8A5A00; --warn-soft:#FBF1DC; --ok:#1B6B3A; --ok-soft:#E3F2E8;
+  --display:"Archivo",system-ui,sans-serif; --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --accent:#6FA8F0; --accent-ink:#0B1524; --accent-soft:#132B4A;
+  --bg:#0F151C; --surface:#161E27; --fg:#E8EDF3; --muted:#A3AFBD; --line:#2A3542;
+  --bad:#F08A80; --bad-soft:#3A1A17; --warn:#E6B45A; --warn-soft:#3A2B10; --ok:#7CCB98; --ok-soft:#14301F; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --accent:#6FA8F0; --accent-ink:#0B1524; --accent-soft:#132B4A;
+  --bg:#0F151C; --surface:#161E27; --fg:#E8EDF3; --muted:#A3AFBD; --line:#2A3542;
+  --bad:#F08A80; --bad-soft:#3A1A17; --warn:#E6B45A; --warn-soft:#3A2B10; --ok:#7CCB98; --ok-soft:#14301F; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55}
+a{color:var(--accent)}
+.wrap{display:grid;grid-template-columns:1fr;gap:0;max-width:1240px;margin:0 auto;padding-block:0 64px;padding-inline:16px}
+@media (min-width:1024px){.wrap{grid-template-columns:220px minmax(0,1fr);gap:48px;padding-inline:32px}}
+nav.side{display:none}
+@media (min-width:1024px){
+  nav.side{display:block;position:sticky;top:env(safe-area-inset-top,0px);align-self:start;padding-top:40px;font-size:13.5px}
+  nav.side a{display:block;color:var(--muted);text-decoration:none;padding:5px 0 5px 12px;border-left:2px solid var(--line)}
+  nav.side a:hover,nav.side a:focus-visible{color:var(--fg);border-left-color:var(--accent);outline:none}
+  nav.side .grp{margin-top:18px;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg);padding-left:12px}
+}
+main{min-width:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.12;margin:0}
+h1{font-size:clamp(30px,4.2vw,46px);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(24px,2.8vw,32px);font-weight:700;margin-top:72px;padding-top:24px;border-top:1px solid var(--line)}
+h3{font-size:19px;font-weight:700;margin-top:36px}
+p{max-width:68ch;margin:12px 0}
+.lead{font-size:18px;color:var(--fg)}
+.meta{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:20px}
+.tag{display:inline-block;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:36px 0 12px}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:32px}
+@media (min-width:768px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stat{background:var(--surface);padding:18px 16px}
+.stat b{display:block;font-family:var(--display);font-size:30px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{display:block;font-size:13px;color:var(--muted);margin-top:8px;line-height:1.4}
+.box{border:1px solid var(--line);background:var(--surface);padding:18px 20px;margin:20px 0;border-radius:var(--r)}
+.box.bad{border-color:var(--bad);background:var(--bad-soft)}
+.box.warn{border-color:var(--warn);background:var(--warn-soft)}
+.box.accent{border-color:var(--accent);background:var(--accent-soft)}
+.box h3{margin-top:0}
+.box ul{margin:8px 0 0;padding-left:20px}
+.box li{margin:6px 0}
+.problems{display:grid;gap:14px;margin-top:20px}
+.problem{border-left:4px solid var(--bad);padding:4px 0 4px 16px}
+.problem b{font-family:var(--display);font-size:17px}
+.problem p{margin:6px 0 0;font-size:15px;color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);margin:16px 0}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.5px;background:var(--surface)}
+th,td{text-align:left;padding:10px 12px;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-family:var(--display);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.crit,.pill.fail{background:var(--bad-soft);color:var(--bad)}
+.pill.high,.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.med,.pill.check{background:var(--accent-soft);color:var(--accent)}
+.pill.low,.pill.pass{background:var(--ok-soft);color:var(--ok)}
+.gaps{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+@media (min-width:720px){.gaps{grid-template-columns:1fr 1fr}}
+.gap{border:1px solid var(--line);background:var(--surface);padding:14px 16px;border-radius:var(--r)}
+.gap .k{font-size:12.5px;color:var(--muted);display:flex;gap:12px;margin-bottom:6px}
+.gap b{font-family:var(--display);font-size:16px}
+.gap p{font-size:14px;margin:6px 0 0;color:var(--muted)}
+.check{list-style:none;padding:0;margin:16px 0;display:grid;gap:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.check li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14.5px;align-items:start}
+.check li:last-child{border-bottom:0}
+.check li b{font-weight:600}
+.check li small{display:block;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr;gap:20px;margin-top:16px}
+@media (min-width:800px){.two{grid-template-columns:1fr 1fr}}
+.col h3{margin-top:0}
+.col ol,.col ul{padding-left:20px;margin:8px 0}
+.col li{margin:8px 0;font-size:15px}
+.col li em{color:var(--muted);font-style:normal;font-size:13px}
+.ba{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0 28px}
+@media (min-width:800px){.ba{grid-template-columns:1fr 1fr}}
+.ba > div{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--surface);min-width:0}
+.ba .lbl{font-family:var(--display);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ba .after{border-color:var(--accent)}
+.ba .after .lbl{color:var(--accent)}
+.ba p{font-size:15px;margin:6px 0}
+.ba .q{font-style:italic;color:var(--muted)}
+.copy{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:14px 16px;margin:12px 0}
+.copy b{font-family:var(--display)}
+.copy p{margin:6px 0;font-size:15px}
+.copy .n{color:var(--muted);font-size:13px}
+.tiers{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+@media (min-width:800px){.tiers{grid-template-columns:1fr 1.25fr 1fr;align-items:stretch}}
+.tier{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface)}
+.tier.rec{border:2px solid var(--accent);background:var(--accent-soft)}
+.tier b{display:block;font-family:var(--display);font-size:24px}
+.tier .t{font-size:13px;color:var(--muted)}
+.tier ul{padding-left:18px;margin:10px 0 0;font-size:14px}
+.tier li{margin:5px 0}
+.timeline{display:grid;gap:0;margin-top:16px;border-left:2px solid var(--line);padding-left:18px}
+.timeline > div{position:relative;padding:8px 0 18px}
+.timeline > div::before{content:"";position:absolute;left:-24px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.timeline b{font-family:var(--display)}
+.timeline p{margin:4px 0 0;font-size:15px;color:var(--muted)}
+.foot{margin-top:72px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+@media (prefers-reduced-motion:no-preference){ html{scroll-behavior:smooth} }
+</style>
+
+<div class="wrap">
+<nav class="side" aria-label="Sections">
+  <a href="#top">Overview</a>
+  <a href="#limits">What this round does not cover</a>
+  <div class="grp">Part 1: SEO</div>
+  <a href="#summary">Summary</a>
+  <a href="#keywords">Keyword opportunities</a>
+  <a href="#pages">Page issues</a>
+  <a href="#content">Content gaps</a>
+  <a href="#tech">Technical checklist</a>
+  <a href="#competitors">Competitors</a>
+  <a href="#plan">Action plan</a>
+  <div class="grp">Part 2: Copy</div>
+  <a href="#copyaudit">Current copy</a>
+  <a href="#rewrites">Rewrites</a>
+  <a href="#ads">Ad copy</a>
+  <div class="grp">Part 3: Leads</div>
+  <a href="#campaign">Campaign plan</a>
+  <a href="#budget">Budget tiers</a>
+  <a href="#next">Next steps</a>
+</nav>
+
+<main>
+<div id="top" class="tag">InPack Nutrients, Germantown, TN</div>
+<h1>SEO, copy and lead plan audit</h1>
+<p class="lead">InPack owns the strongest story in its category: a compounding pharmacist who builds the packs himself, nine NBA teams, NSF Certified for Sport options. The store that takes the money says none of it, and it is split across three domains with placeholder text still live. Fix the store first. The traffic is already arriving.</p>
+<div class="meta">
+  <span>Observed 29 Sep 2026</span>
+  <span>Prepared by Howz</span>
+  <span>Basis: 22 pages read across store., www. and shop.inpacknutrients.com, regelpharmalab.com, Facebook, LinkedIn, Linktree, plus 6 manual searches</span>
+</div>
+
+<div class="stats">
+  <div class="stat"><b>#4</b><span>approximate position for "sports performance vitamin pack" (manual search, 29 Sep 2026, not Google)</span></div>
+  <div class="stat"><b>4.8</b><span>Google rating, 10+ reviews. But that is Regel PharmaLab. InPack itself has 0 reviews on Facebook and 0 on the store</span></div>
+  <div class="stat"><b>3</b><span>live domains for one brand: www (Wix), store (Shopify), shop (Shopify, empty). Plus regelpharmalab.com selling the same Immune Pack</span></div>
+  <div class="stat"><b>9 / 0</b><span>NBA teams trust the packs / times the store homepage mentions it (or the pharmacist, or NSF)</span></div>
+</div>
+
+<h2 id="limits" style="margin-top:40px">What this round does not cover</h2>
+<div class="box warn">
+<ul>
+  <li><b>No direct HTML read.</b> All three inpacknutrients.com domains were blocked for our tools (network policy, HTTP 403). Page text came from a search index. We could not verify robots.txt, sitemap, canonical tags, structured data, conversion tags (GA4, Google Ads, Meta Pixel), page speed or the real brand colors. Those items are marked "verify" below.</li>
+  <li><b>No keyword volumes or difficulty scores.</b> Semrush had no API units and Firecrawl had no credits. Every difficulty is a qualitative estimate.</li>
+  <li><b>Positions are approximate.</b> Six manual searches on 29 Sep 2026 through a US web index that is not Google. Use them as presence, not rank.</li>
+  <li><b>Instagram not read.</b> @inpacknutrients exists but no tool could open it. Followers, bio and captions are unknown. Copy was judged from the same captions mirrored on Facebook and LinkedIn.</li>
+  <li><b>No Google Business Profile for InPack found</b> as its own entity. No Search Console, no analytics.</li>
+  <li><b>Page colors are an assumption.</b> The palette here is a guess; it swaps in one line when the real hex codes arrive.</li>
+</ul>
+</div>
+
+<h2 id="summary">Part 1. SEO audit</h2>
+<h3>The three problems costing leads right now</h3>
+<div class="problems">
+  <div class="problem"><b>One brand, four websites.</b><p>www has the best copy and the current blog but no cart. store sells but has the worst copy. shop is empty yet indexed with the strongest title of all. regelpharmalab.com sells the Immune Pack separately. Every backlink and every brand search is split four ways. A customer who searches the name gets a lottery.</p></div>
+  <div class="problem"><b>Placeholder and template text on pages that sell.</b><p>"(Include details on each of the ingredients as an active link)" is live on every product. "Vitmain C" and "Vitmain D" on the Immune Pack. The store's About Us is Shopify theme text claiming "several decades of successful operation" for a company founded in 2022. For a $90 a month health product, this is where trust breaks.</p></div>
+  <div class="problem"><b>Test and affiliate products indexed as the public catalog.</b><p>"Jessica Performance Pack", "Jessica Performance Pack 2", "Jessica Sleep Pack", "Daavon Men" and "Daavon Women" ($150 a month) and "Forever Fit" all sit in the catalog with the same description as the Sports Pack. 14 products, 5 real. Duplicate content, and a shopper wondering who Jessica is.</p></div>
+</div>
+<div class="box accent">
+<h3>The surprise of this round</h3>
+<p>The store never says who makes the product. "Designed by a compounding pharmacist", "Trusted by 9 NBA teams" and "NSF Certified for Sport" live on the Wix site, on Facebook and on LinkedIn. On the Shopify store, where the purchase happens, the vendor field says "InPack Nutrients" and the product type says "Vitamins &amp; Supplements". That is the whole story a first-time visitor gets. Persona, Care/of and HUM cannot say "a pharmacist in Germantown builds this by hand". InPack can, and doesn't.</p>
+</div>
+<div class="box bad">
+<h3>A regulatory risk that is also an SEO risk</h3>
+<p>"Help you control your diabetes", "lower A1C levels", "decreased likelihood of bacterial and viral diseases such as Influenza and COVID-19". These are disease claims on a dietary supplement. Google treats health pages as "your money or your life" content, and pages with cure language and no FDA disclaimer lose to pages that use structure/function language ("supports healthy glucose metabolism*"). No page we read carries the standard disclaimer.</p>
+</div>
+
+<h3 id="keywords">Keyword opportunities</h3>
+<p>All difficulty values are estimates. No tool data was available this round.</p>
+<div class="tag" style="margin-top:8px">High priority</div>
+<div class="tbl"><table>
+<tr><th>Keyword</th><th>Difficulty</th><th>Today</th><th>Intent</th><th>Where to work</th></tr>
+<tr><td>sports performance vitamin pack</td><td>medium</td><td>~#4 (store product page)</td><td>buy</td><td>Product page: full description, NSF, NBA, ingredient table, FAQ, Product schema</td></tr>
+<tr><td>vitamin pack for athletes</td><td>medium-high</td><td>absent</td><td>buy / research</td><td>New "Athletes &amp; Teams" collection on the store with 400+ words</td></tr>
+<tr><td>pharmacist designed vitamin packs</td><td>low</td><td>absent</td><td>buy</td><td>Store homepage and About page. This is the niche nobody big competes in</td></tr>
+<tr><td>travel vitamin pack for athletes</td><td>low</td><td>absent (RoadGame does not surface)</td><td>buy</td><td>RoadGame collection: add "travel" to the name, explain 15 days and road games</td></tr>
+<tr><td>custom supplement packs for gyms / trainers</td><td>low</td><td>absent (page lives on www with a draft slug)</td><td>B2B lead</td><td>Move to the store as /pages/gyms-and-trainers with a lead form</td></tr>
+<tr><td>vitamin packs Memphis / supplements Germantown TN</td><td>low</td><td>absent; only Regel PharmaLab appears</td><td>local</td><td>InPack Google Business Profile, a local pickup page, LocalBusiness schema</td></tr>
+</table></div>
+<div class="tag" style="margin-top:8px">Medium priority</div>
+<div class="tbl"><table>
+<tr><th>Keyword</th><th>Difficulty</th><th>Today</th><th>Intent</th><th>Where to work</th></tr>
+<tr><td>personalized vitamin packs</td><td>high (Persona, Care/of, HUM, Shaklee)</td><td>absent from top 10</td><td>research / buy</td><td>Do not fight head-on. Secondary term on the homepage with the pharmacist angle</td></tr>
+<tr><td>immune booster vitamin pack</td><td>medium</td><td>absent</td><td>buy</td><td>Immune product: fix typos, remove COVID claim, list doses</td></tr>
+<tr><td>blood sugar support supplement pack</td><td>medium</td><td>absent</td><td>buy</td><td>Glucose product: rewrite to structure/function language</td></tr>
+<tr><td>NSF certified for sport vitamin pack</td><td>medium</td><td>absent</td><td>buy</td><td>Only after confirming which SKUs carry the certification, then its own collection</td></tr>
+<tr><td>magnesium for athletes recovery</td><td>medium</td><td>www blog post (Jun 2025)</td><td>learn</td><td>Keep on the blog, link to the Sports Pack</td></tr>
+</table></div>
+<p style="font-size:14.5px;color:var(--muted)">Low priority: "weight loss vitamin pack" (big brands, claim risk), "vitamins for ADHD" (the 2022 post attracts the wrong traffic and carries claim risk), "compounding pharmacy Memphis" (that is Regel's term, not InPack's).</p>
+
+<h3 id="pages">Page issues</h3>
+<div class="tbl"><table>
+<tr><th>Page</th><th>Problem</th><th>Severity</th><th>Fix</th></tr>
+<tr><td>store homepage</td><td>Title tag is just "Inpack Nutrients". No meta description. No H1 with a keyword. Zero mention of pharmacist, NBA or NSF</td><td><span class="pill crit">critical</span></td><td>Title "Pharmacist-Designed Vitamin Packs for Athletes | InPack". H1 and first paragraph carry the differentiator</td></tr>
+<tr><td>store homepage</td><td>Weight Loss card shows the placeholder "(Include details on each of the ingredients)" on the homepage itself</td><td><span class="pill crit">critical</span></td><td>Rewrite the four short descriptions</td></tr>
+<tr><td>store /pages/about-us</td><td>Shopify theme text: "several decades", "thousands of happy customers", "fixed shipping", "free return"</td><td><span class="pill crit">critical</span></td><td>The real story: Josh and Summer Regel, UT 2000, Regel PharmaLab 2003, InPack 2022, nine NBA teams, a photo of the pharmacy</td></tr>
+<tr><td>store Immune Booster Pack</td><td>"Vitmain C", "Vitmain D". COVID-19 and Influenza claim. Placeholder ingredients</td><td><span class="pill high">high</span></td><td>Fix typos, structure/function language, ingredient list with dose and form, FDA disclaimer</td></tr>
+<tr><td>store Glucose Support Pack</td><td>"control your diabetes", "lower A1C". URL says glucose-control, title says Glucose Support</td><td><span class="pill high">high</span></td><td>Rewrite claims, keep the URL, add disclaimer</td></tr>
+<tr><td>store Sports Performance Pack</td><td>60 words for the flagship product. No NSF, no NBA, no "who is this for", no FAQ, no reviews</td><td><span class="pill high">high</span></td><td>400+ words, ingredient table with doses, FAQ, social proof, Product schema with ratings once reviews exist</td></tr>
+<tr><td>store /collections/all</td><td>14 products, 5 real. Jessica, Daavon and Forever Fit packs copy the Sports Pack description</td><td><span class="pill high">high</span></td><td>Unpublish affiliate packs or sell them by direct link only with noindex. If real, unique description and audience</td></tr>
+<tr><td>shop.inpacknutrients.com</td><td>Whole site indexed with the best brand title and no products</td><td><span class="pill high">high</span></td><td>301 redirect to the store. Do not keep both</td></tr>
+<tr><td>store Daavon Men / Women</td><td>1,500+ words pasted from a supplier leaflet, $150 a month with no visible reason</td><td><span class="pill med">medium</span></td><td>Summarize, explain what differs from the $90 Sports Pack, or unpublish</td></tr>
+<tr><td>store /blogs/news</td><td>Two posts, both 18 Sep 2022. ADHD post uses treatment language</td><td><span class="pill med">medium</span></td><td>Migrate the four 2025 posts from www, revise the ADHD post</td></tr>
+<tr><td>store /pages/contact</td><td>"Store locator" label on the pharmacy address. No map, no full hours, no click-to-call stated</td><td><span class="pill med">medium</span></td><td>"Visit our pharmacy" with map, hours (M-F 9-5 CST, closed 1:00-1:30), tel link, form</td></tr>
+<tr><td>store /collections/roadgame</td><td>Internal name with no explanation. No "travel" in the title</td><td><span class="pill med">medium</span></td><td>Title "RoadGame Travel Vitamin Packs for Athletes (15 days)" plus text about flights, hotels and away games</td></tr>
+<tr><td>www homepage</td><td>Typos "RIGTH", "PACKED F OR RESULTS", "optimal affect", "Wholistic". Good copy with no cart</td><td><span class="pill med">medium</span></td><td>Fix typos, then decide the fate of www (see plan)</td></tr>
+<tr><td>www /trainers-and-gyms-1 and /copy-of-pharmacies</td><td>Wix draft slugs indexed</td><td><span class="pill med">medium</span></td><td>Rename to /gyms-and-trainers and /healthcare-professionals with 301s</td></tr>
+<tr><td>regelpharmalab.com</td><td>Sells the Immune Booster Pack separately with no link to InPack</td><td><span class="pill low">low</span></td><td>Cross-link "Now sold as InPack Nutrients" and canonical or redirect the product</td></tr>
+</table></div>
+
+<h3 id="content">Content gaps</h3>
+<div class="gaps">
+  <div class="gap"><div class="k"><span>High priority</span><span>Low effort</span></div><b>"Why a compounding pharmacist" page</b><p>No national competitor can say this. It is the one story InPack wins alone.</p></div>
+  <div class="gap"><div class="k"><span>High priority</span><span>Medium effort</span></div><b>"Teams &amp; Athletes" page</b><p>Nine NBA teams (with permission) and NSF. The strongest proof the brand has, and it has no page.</p></div>
+  <div class="gap"><div class="k"><span>High priority</span><span>Low effort</span></div><b>Ingredient table per pack</b><p>Dose, form and supplier brand. Designs for Sport and Klean show full Supplement Facts. InPack shows bare names.</p></div>
+  <div class="gap"><div class="k"><span>High priority</span><span>Low effort</span></div><b>FAQ per product</b><p>When to take it, morning or evening, with medication, how to cancel. A $30 to $150 subscription without a cancel FAQ loses sales and gains chargebacks.</p></div>
+  <div class="gap"><div class="k"><span>Medium priority</span><span>Medium effort</span></div><b>One blog, one post a month</b><p>www has four 2025 posts, store has two from 2022. One blog, on the domain that sells.</p></div>
+  <div class="gap"><div class="k"><span>Medium priority</span><span>Low effort</span></div><b>Local page: pickup in Germantown</b><p>A Memphis customer can pick up at the pharmacy. Today there is no way to know that.</p></div>
+  <div class="gap"><div class="k"><span>Medium priority</span><span>Medium effort</span></div><b>Testimonials with name and sport</b><p>Zero reviews on Facebook, zero on the store. Only Regel PharmaLab has its 4.8.</p></div>
+  <div class="gap"><div class="k"><span>Low priority</span><span>High effort</span></div><b>"Which pack is right for me?" quiz</b><p>Every national competitor has one. Homepage conversion tool for later.</p></div>
+</div>
+
+<h3 id="tech">Technical checklist</h3>
+<ul class="check">
+  <li><span class="pill pass">pass</span><div><b>HTTPS</b><small>Every URL read is https. Shopify and Wix force TLS.</small></div></li>
+  <li><span class="pill check">verify</span><div><b>robots.txt</b><small>Shopify generates it by default (blocks cart, checkout, account). Not read: network block.</small></div></li>
+  <li><span class="pill check">verify</span><div><b>sitemap.xml</b><small>Shopify generates one automatically. Confirm it is submitted in Search Console.</small></div></li>
+  <li><span class="pill warn">attention</span><div><b>Indexing</b><small>Three subdomains indexed plus regelpharmalab.com with the same product. The store's /cart page surfaced in the index.</small></div></li>
+  <li><span class="pill check">verify</span><div><b>Canonical tags</b><small>Shopify sets self-canonicals. The real problem is across domains, not inside the store.</small></div></li>
+  <li><span class="pill check">verify</span><div><b>Structured data</b><small>Shopify themes emit Product JSON-LD. No LocalBusiness or Pharmacy schema on any domain (inferred). Test with Rich Results.</small></div></li>
+  <li><span class="pill check">verify</span><div><b>Speed / Core Web Vitals</b><small>Not measured. Run PageSpeed Insights on the three main product pages.</small></div></li>
+  <li><span class="pill check">verify</span><div><b>Mobile</b><small>Both themes are responsive. Confirm tap targets in the menu.</small></div></li>
+  <li><span class="pill warn">attention</span><div><b>Name, address, phone</b><small>Store: "1352 Cordova Cove". Facebook: "1352 Cordova Cove #201". Regel's NPI record: an old Cordova address. Standardize with "#201" everywhere and update old listings.</small></div></li>
+  <li><span class="pill fail">fail</span><div><b>Google Business Profile</b><small>No InPack profile found. Facebook shows 0 reviews. Regel PharmaLab has 4.8 (10+).</small></div></li>
+  <li><span class="pill check">verify</span><div><b>Conversion tags</b><small>Not read. Check with Tag Assistant for a duplicated AW- ID, double GA4 or double Meta Pixel (common on Shopify with apps).</small></div></li>
+  <li><span class="pill pass">n/a</span><div><b>WhatsApp</b><small>US market. Verify the tel: link and SMS instead.</small></div></li>
+  <li><span class="pill warn">attention</span><div><b>Firewall / bot blocking</b><small>The domain was refused by our environment's proxy; this may be our policy, not the site's. Confirm Googlebot is not blocked (Search Console, crawl stats).</small></div></li>
+  <li><span class="pill fail">fail</span><div><b>Domain strategy</b><small>www (Wix), store (Shopify), shop (Shopify), and Linktree listed as "homepage" on LinkedIn. Four front doors.</small></div></li>
+  <li><span class="pill fail">fail</span><div><b>Health claims / FDA disclaimer</b><small>No page read carries "These statements have not been evaluated by the FDA".</small></div></li>
+  <li><span class="pill warn">attention</span><div><b>Blog</b><small>Two blogs, neither updated after Oct 2025.</small></div></li>
+</ul>
+
+<h3 id="competitors">Competitors</h3>
+<p>Manual searches, 29 Sep 2026. "sports performance vitamin pack": Designs for Sport (Amazon and own site), Thorne, InPack at about 4th, Designs for Health, Target, NeoLife, Six Star, Wilderness Athlete. "personalized vitamin packs": Shaklee, BodyLogicMD, Persona, Vitable, Perelel, VitaRx, VitaminLab; InPack absent. Local "vitamin packs Germantown TN compounding pharmacy": Regel PharmaLab appears (Healthgrades, Yelp, Facebook); InPack absent.</p>
+<div class="tbl"><table>
+<tr><th>Competitor</th><th>"sports performance vitamin pack"</th><th>"personalized vitamin packs"</th><th>Instagram</th><th>Reviews</th><th>Blog</th><th>Own brand</th><th>Differentiator</th></tr>
+<tr><td>Designs for Sport (Power Pack, $86 to $98)</td><td>#1 and #3</td><td>absent</td><td>not measured</td><td>4.9 via resellers (22k on Supplement First)</td><td>yes</td><td>yes</td><td>NSF Certified for Sport, full Supplement Facts</td></tr>
+<tr><td>Persona Nutrition (Nestlé)</td><td>absent</td><td>#3</td><td>not measured</td><td>4.4 (10k+ Trustpilot)</td><td>yes</td><td>yes</td><td>Quiz, nutritionists, drug interaction check</td></tr>
+<tr><td>Klean Athlete (Sport Pack, $93)</td><td>present</td><td>absent</td><td>not measured</td><td>not measured</td><td>yes</td><td>yes</td><td>NSF, sponsored athletes</td></tr>
+<tr><td>Regel PharmaLab (same owner)</td><td>absent</td><td>absent</td><td>none</td><td>4.8 (10+)</td><td>no</td><td>yes</td><td>The local proof InPack is not using</td></tr>
+<tr><td>InPack Nutrients (Sports Pack, $90)</td><td>~#4</td><td>absent</td><td>exists, not read</td><td>0 store, 0 Facebook</td><td>2 stalled blogs</td><td>yes</td><td>Compounding pharmacist, 9 NBA teams, NSF (not said on the store)</td></tr>
+</table></div>
+<p>Designs for Sport wins on product proof: full label, NSF up front, tens of thousands of reseller reviews. Persona wins on personalization and scale. InPack is already on page one for the product term without trying, which shows "vitamin pack for athletes" is open. It loses on visible social proof and on saying who makes the product.</p>
+
+<h3 id="plan">Action plan</h3>
+<div class="two">
+  <div class="col box"><h3>Do this week</h3><ol>
+    <li>Fix the title and meta description on the store homepage and four main products <em>1 h</em></li>
+    <li>Delete the placeholder text on 9 pages and write the ingredient list with doses <em>3 h</em></li>
+    <li>Fix "Vitmain", "RIGTH", "PACKED F OR", "affect" <em>20 min</em></li>
+    <li>Unpublish or noindex the Jessica, Daavon and Forever Fit packs, or give each a unique description <em>1 h</em></li>
+    <li>Rewrite About Us with the real story and a photo of Josh in the pharmacy <em>2 h</em></li>
+    <li>301 redirect shop.inpacknutrients.com to the store <em>30 min</em></li>
+    <li>Add the FDA disclaimer and swap disease claims for structure/function language on Glucose and Immune <em>2 h</em></li>
+    <li>Create the InPack Google Business Profile with "#201", phone, category "Vitamin &amp; supplements store", photos <em>1 h</em></li>
+    <li>Ask 10 current customers and athletes for reviews (Google and store) <em>1 h</em></li>
+    <li>Run PageSpeed Insights and Tag Assistant on the three product pages and record results <em>1 h</em></li>
+  </ol></div>
+  <div class="col box"><h3>Quarter investments</h3><ul>
+    <li><b>One domain.</b> Move the Wix content into Shopify pages, point www.inpacknutrients.com at the store, 301 every Wix URL (home, blog, trainers-and-gyms-1, copy-of-pharmacies, linkinbio). Close shop. Assumption: keep Shopify because it already has the catalog, subscriptions and checkout.</li>
+    <li><b>"Teams &amp; Athletes" page</b> with NSF, teams (with permission) and trainer testimonials.</li>
+    <li><b>"Why a compounding pharmacist" page</b> with Josh and Summer, UT 2000, Regel 2003, and what changes in form and dose.</li>
+    <li><b>Supplement Facts table</b> on every pack with a label photo.</li>
+    <li><b>One blog on the store</b>, one post a month, starting with the four www posts migrated.</li>
+    <li><b>Schema:</b> Product, Offer and AggregateRating on packs; Organization with sameAs to Instagram, Facebook, LinkedIn, YouTube; LocalBusiness on the contact page with hours and coordinates.</li>
+    <li><b>B2B affiliate program</b> with its own landing page and form (today the CTA is "schedule a call" with no visible link).</li>
+  </ul></div>
+</div>
+
+<h2 id="copyaudit">Part 2. Copy</h2>
+<p>Judged with the ad copy ruler: keyword in the headline, proof, call to action, the differentiator named, character limits per platform, and no disease claims. Scores from 1 to 5.</p>
+<div class="tbl"><table>
+<tr><th>Piece</th><th>Score</th><th>What breaks</th></tr>
+<tr><td>Store homepage title: "Inpack Nutrients"</td><td>1</td><td>No keyword, no promise, no description. A searcher cannot tell what it is</td></tr>
+<tr><td>www title: "Get Your Personalized Vitamin Packs | Inpack Nutrients | Achieve Your Health Goals Today"</td><td>3</td><td>Has the keyword but runs 88 characters (cuts at 60). "Achieve Your Health Goals Today" is filler. "Personalized" fights Persona and Care/of</td></tr>
+<tr><td>www H1: "Vitamins and supplements made for your unique challenges"</td><td>2</td><td>Any brand could sign it. The pharmacist is four screens down</td></tr>
+<tr><td>"It shouldn't be so hard to be healthy! Our world is broken"</td><td>2</td><td>Fear with no proof. "You can't medicate your way to health" is confusing coming from a pharmacist</td></tr>
+<tr><td>"Trusted by 9 NBA teams / Designed by a compounding pharmacist"</td><td>4</td><td>The best thing on the site. Only on www, not the store, with no name, photo or logo</td></tr>
+<tr><td>"PACKED F OR RESULTS" / "THE RIGTH SUPPLEMENTS"</td><td>1</td><td>Typos in the main promise. In health, a typo reads as carelessness</td></tr>
+<tr><td>Store About Us</td><td>0</td><td>Theme text. False for a 2022 company, and it ignores a real story that is good</td></tr>
+<tr><td>Sports Performance Pack ($89.99/mo)</td><td>2</td><td>60 words, "your sport of choice", no dose, no NSF, no NBA, no audience, placeholder</td></tr>
+<tr><td>Immune Booster Pack ($29.99/mo)</td><td>1</td><td>"Vitmain C", COVID claim, placeholder</td></tr>
+<tr><td>Glucose Support Pack ($69.99/mo)</td><td>1</td><td>"control your diabetes", "lower A1C". Disease claims</td></tr>
+<tr><td>Weight Loss Pack ($36.99/mo)</td><td>1</td><td>Four ingredient names and the placeholder. Not one selling sentence</td></tr>
+<tr><td>RoadGame Basic / Advanced (15 days)</td><td>3</td><td>Best writing on the store ("long flights, hotel sleep, irregular meals"), but the name does not say "travel" and Basic vs Advanced is unexplained</td></tr>
+<tr><td>Social bio: "Take Your Nutrients The Easy Way!"</td><td>2</td><td>Says convenience, not who makes it or for whom. No CTA</td></tr>
+<tr><td>Caption, Sep 2026: "Build an athletic supplementation program centered on quality, consistency, and trust... NSF Certified for Sport... Get in touch!"</td><td>3</td><td>Has proof. Corporate voice, no number, no link, no benefit to the reader</td></tr>
+<tr><td>Captions: "Stronger starts here", "Personalized wellness, made simple"</td><td>2</td><td>Lines any whey brand uses. Zero differentiator</td></tr>
+<tr><td>Caption, Dec 2024: "Give the gift of health... Unpack Your Potential... Shop now: inpacknutrients.com"</td><td>3</td><td>Has CTA and link, but the link goes to www, which does not sell. "Unpack Your Potential" is a keeper</td></tr>
+</table></div>
+<p>The pattern: the brand writes like a wellness corporation and is the opposite of one. Its strongest line, "Created by a functionally trained compounding pharmacist, NOT a corporation", is hidden on the gyms page.</p>
+
+<h3 id="rewrites">Rewrites</h3>
+<p style="font-size:14.5px;color:var(--muted)">Doses shown are taken from the current product pages and must be confirmed against the label before publishing.</p>
+
+<div class="ba">
+  <div><div class="lbl">Before: store homepage title</div><p class="q">Inpack Nutrients</p><p class="q">(no description)</p></div>
+  <div class="after"><div class="lbl">After</div><p><b>Pharmacist-Designed Vitamin Packs for Athletes | InPack</b></p><p>Daily morning and evening vitamin packs built by a compounding pharmacist and trusted by 9 NBA teams. NSF Certified for Sport options. Ships from Germantown, TN.</p></div>
+</div>
+<div class="ba">
+  <div><div class="lbl">Before: homepage H1 and opener</div><p class="q">VITAMINS AND SUPPLEMENTS MADE FOR YOUR UNIQUE CHALLENGES</p><p class="q">IT SHOULDN'T BE SO HARD TO BE HEALTHY! Our world is broken...</p></div>
+  <div class="after"><div class="lbl">After</div><p><b>Vitamin packs built by a pharmacist, not a marketing team.</b></p><p>Josh Regel, PharmD, has run a compounding pharmacy in Germantown, TN since 2003. He builds every InPack the way he builds a prescription: the right form, the right dose, morning and evening, sorted into one daily packet. Nine NBA teams trust the same packs.</p><p>Buttons: "Find your pack" and "See what's inside"</p></div>
+</div>
+<div class="ba">
+  <div><div class="lbl">Before: About Us</div><p class="q">We guarantee the highest quality of the products we sell. Several decades of successful operation and thousands of happy customers let us feel certain about that...</p></div>
+  <div class="after"><div class="lbl">After</div><p>InPack Nutrients started in 2022 inside Regel PharmaLab, the compounding pharmacy Josh and Summer Regel opened in 2003 after graduating from the University of Tennessee College of Pharmacy. For twenty years, patients asked Josh the same questions: what should I take, how much, and when? The answer became a packet. Each InPack is assembled in our pharmacy at 1352 Cordova Cove, Germantown, TN, with the same ingredient brands we hand to our own patients. Our Sports Performance Pack is used by nine NBA teams. If you are in the Memphis area, come pick yours up and meet the pharmacist who built it.</p></div>
+</div>
+<div class="ba">
+  <div><div class="lbl">Before: Sports Performance Pack</div><p class="q">The Sports Pack was specially designed with premium ingredients to improve performance in your sport of choice... Pack Ingredients: Learn more about this pack. (Include details on each of the ingredients as an active link)</p></div>
+  <div class="after"><div class="lbl">After</div><p><b>Sports Performance Vitamin Pack. Pharmacist-built, used by 9 NBA teams.</b></p><p>One morning packet, one evening packet, 30 days. Built by compounding pharmacist Josh Regel for athletes who train hard and travel harder. The same pack nine NBA teams order for their rosters.</p><p><b>What's inside each day:</b> O.N.E. Multivitamin (AM), CoQ10 100 mg (AM), Omega-3 + Vitamin D (AM), Probiotic GI (AM), Magnesium Glycinate 300 mg (PM).</p><p><b>Why these five:</b> magnesium glycinate supports muscle relaxation and sleep; CoQ10 supports cellular energy; omega-3 with D supports joint comfort and recovery; the probiotic supports absorption; the multivitamin fills the gaps a training diet leaves.*</p><p><b>FAQ:</b> When do I take it? Can I take it with my medication (ask us, Josh reviews every question)? How do I pause or cancel (one click in your account)?</p><p class="n">*These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.</p></div>
+</div>
+<div class="ba">
+  <div><div class="lbl">Before: Glucose Support Pack</div><p class="q">...especially designed to help you control your diabetes by improving your insulin sensitivity, increasing your metabolism and assisting you on your journey to lower A1C levels.</p></div>
+  <div class="after"><div class="lbl">After</div><p>Built for adults who want to support healthy glucose metabolism with a daily routine they can keep. Berberine (Glucose Tolerance II), magnesium glycinate, zinc picolinate, vitamin D3 and a GI probiotic, sorted into morning and evening packets by a compounding pharmacist.* If you take prescription medication, talk to your pharmacist first. Ours will answer.</p></div>
+</div>
+<div class="ba">
+  <div><div class="lbl">Before: Instagram bio</div><p class="q">Take Your Nutrients The Easy Way!</p></div>
+  <div class="after"><div class="lbl">After (148 characters)</div><p>Vitamin packs built by a compounding pharmacist<br>Trusted by 9 NBA teams. NSF Certified for Sport options<br>Germantown, TN. Ships US-wide<br>Find your pack (link)</p></div>
+</div>
+
+<h3 id="ads">New copy for media</h3>
+<div class="copy"><b>Google Search (US), campaign "vitamin packs for athletes"</b>
+<p><b>Headlines (30 characters):</b> "Pharmacist-Built Vitamin Packs" (30) / "Packs Used by 9 NBA Teams" (25) / "Sports Vitamin Pack, $89.99/mo" (30). Extras for the responsive ad: "NSF Certified for Sport", "AM + PM Packs, 30 Days", "InPack Nutrients", "Find Your Pack Today", "Travel Packs for Athletes", "Built in a Real Pharmacy".</p>
+<p><b>Descriptions (90 characters):</b> "Morning and evening vitamin packs built by a compounding pharmacist. Trusted by 9 NBA teams." (90) / "No guessing. One packet a day, sorted by a PharmD. NSF Certified for Sport options. Ships US." (89)</p></div>
+<div class="copy"><b>Meta lead form, variant A: gyms and trainers</b>
+<p>Your clients ask you what vitamins to take. Now you have an answer with your logo on the box.</p>
+<p>InPack builds custom daily supplement packs with a compounding pharmacist, ships straight to your client, and pays you monthly rev-share. Trusted by 9 NBA teams. No inventory, no minimums.</p>
+<p class="n">Headline: "Custom vitamin packs for your gym" (33). Description: "Rev-share paid monthly" (22). CTA: Sign Up. Form: name, gym, city, active clients, phone.</p></div>
+<div class="copy"><b>Meta lead form, variant B: athletes</b>
+<p>Nine NBA teams get their vitamin packs from a pharmacist in Germantown, TN. You can too.</p>
+<p>One morning packet, one evening packet, 30 days. Magnesium glycinate, CoQ10, omega-3 + D, probiotic, multivitamin. Built by Josh Regel, PharmD. From $89.99 a month, pause any time.</p>
+<p class="n">Headline: "The pack the pros take" (22). Description: "NSF Certified for Sport options" (30). CTA: Get Offer. Form: name, email, sport, 10% off the first 90-day pack.</p></div>
+<div class="copy"><b>Meta lead form, variant C: local, Memphis metro (25-mile radius)</b>
+<p>There is a compounding pharmacist in Germantown who will build your daily vitamin pack and hand it to you himself.</p>
+<p>Josh Regel has run Regel PharmaLab since 2003. InPack is what he gives his own patients: sorted packets, right dose, morning and evening. Pick up at 1352 Cordova Cove or get it shipped.</p>
+<p class="n">Headline: "Vitamin packs, built in Germantown" (34). Description: "Ask the pharmacist, free" (24). CTA: Book Now. Form: name, phone, goal (performance / energy / immune basics / travel), pickup or shipping.</p></div>
+<p style="font-size:14.5px;color:var(--muted)">A/B test: proof ("9 NBA teams") vs authority ("pharmacist-built") in the headline; "Get Offer" vs "Learn More" as the CTA. Run 14 days, at least 50 leads per variant before judging.</p>
+
+<h2 id="campaign">Part 3. Lead generation plan</h2>
+<div class="box warn"><p><b>Assumptions.</b> No deadline or budget was given. This plan assumes a 90-day window starting the week the store fixes ship, and a media budget between $1,500 and $6,000 a month with $3,000 recommended. Change either and the calendar below shifts, the structure does not.</p></div>
+
+<h3>Goals</h3>
+<p>Ninety days: 150 qualified leads and 12 gym or trainer partners signed. A <b>qualified lead</b> is a person or gym that fills the form with a real phone number and a stated goal, in the US. A <b>hot lead</b> is one that replies to the first message within 48 hours or books a call with Josh.</p>
+
+<h3>Audiences and messages</h3>
+<div class="tbl"><table>
+<tr><th>Audience</th><th>Message</th><th>Proof</th><th>Offer</th></tr>
+<tr><td>Competitive athletes and serious amateurs, 18 to 40, US</td><td>The pack the pros take, built by a pharmacist</td><td>9 NBA teams, NSF options, ingredient table</td><td>10% off the first 90-day pack</td></tr>
+<tr><td>Gym owners and personal trainers, 25 to 55, US</td><td>An answer to "what vitamins should I take", with your logo on the box</td><td>Rev-share, no inventory, pharmacist on call</td><td>Free setup call with Josh</td></tr>
+<tr><td>Memphis metro, 30 to 60, health-conscious</td><td>A local pharmacist will build your pack and hand it to you</td><td>Regel PharmaLab since 2003, 4.8 rating</td><td>Free pharmacist consultation, pickup available</td></tr>
+<tr><td>Regel PharmaLab patients (email and in-store)</td><td>Your pharmacist's own daily pack</td><td>They already know Josh</td><td>Patient price on the first month</td></tr>
+</table></div>
+
+<h3>Channels and budget split (recommended tier, $3,000 a month)</h3>
+<div class="tbl"><table>
+<tr><th>Channel</th><th>Share</th><th>Job</th><th>Expected result at 90 days (estimate)</th></tr>
+<tr><td>Google Search: brand and product terms</td><td>35% ($1,050)</td><td>Catch people already searching "sports performance vitamin pack" and the brand</td><td>40 to 60 purchases or leads</td></tr>
+<tr><td>Meta lead forms: athletes and gyms</td><td>40% ($1,200)</td><td>Create demand with the NBA and pharmacist proof</td><td>80 to 110 leads, 8 to 12 gym calls</td></tr>
+<tr><td>Meta local: Memphis radius</td><td>15% ($450)</td><td>Pickup and consultation leads</td><td>20 to 30 leads</td></tr>
+<tr><td>Google Business Profile and email to Regel patients</td><td>10% ($300, mostly time)</td><td>Reviews, local pack, warm list</td><td>15 reviews, 10 to 20 orders</td></tr>
+</table></div>
+
+<h3>Calendar</h3>
+<div class="timeline">
+  <div><b>Weeks 1 and 2: fix the store</b><p>Everything in "Do this week". No paid media until the placeholder text, About Us and disclaimers are live. Sending ads to the current store wastes the budget.</p></div>
+  <div><b>Weeks 3 and 4: launch</b><p>Google Search on brand and product terms. Meta variant B (athletes) and variant A (gyms). Google Business Profile live, first review requests sent.</p></div>
+  <div><b>Weeks 5 to 8: learn</b><p>Add Meta variant C (local). Kill the losing headline in each test. Publish the "Teams &amp; Athletes" and "Why a compounding pharmacist" pages and point ads at them.</p></div>
+  <div><b>Weeks 9 to 12: scale</b><p>Move budget to the two best ad sets. Start the domain consolidation (www into Shopify). First blog post on the store. Report on leads, cost per lead and gym partners signed.</p></div>
+</div>
+
+<h3>Pieces needed</h3>
+<div class="tbl"><table>
+<tr><th>Piece</th><th>Priority</th><th>Deadline</th></tr>
+<tr><td>Rewritten store homepage, About Us and four product pages (copy above)</td><td><span class="pill crit">first</span></td><td>end of week 2</td></tr>
+<tr><td>Photo of Josh in the pharmacy, photo of a finished pack, label photos</td><td><span class="pill crit">first</span></td><td>end of week 2</td></tr>
+<tr><td>Three Meta lead forms and two short videos (Josh assembling a pack, 20 to 30 seconds)</td><td><span class="pill high">second</span></td><td>end of week 3</td></tr>
+<tr><td>Google Search ad group with the headlines above</td><td><span class="pill high">second</span></td><td>end of week 3</td></tr>
+<tr><td>Written permission to name the NBA teams, or the phrasing "9 NBA teams" only</td><td><span class="pill high">second</span></td><td>end of week 3</td></tr>
+<tr><td>"Teams &amp; Athletes" and "Why a compounding pharmacist" pages</td><td><span class="pill med">third</span></td><td>end of week 6</td></tr>
+<tr><td>Lead follow-up script (SMS within 1 hour, call within 24 hours)</td><td><span class="pill med">third</span></td><td>end of week 3</td></tr>
+</table></div>
+
+<h3>Metrics</h3>
+<div class="tbl"><table>
+<tr><th>Metric</th><th>Target</th><th>Where to read it</th></tr>
+<tr><td>Qualified leads per month</td><td>50 by month 2</td><td>Meta lead forms plus store form, deduplicated</td></tr>
+<tr><td>Cost per qualified lead</td><td>under $25 (athletes), under $80 (gyms)</td><td>Ad spend divided by leads, per ad set</td></tr>
+<tr><td>Lead to first order</td><td>20% within 14 days</td><td>Shopify orders matched to lead emails</td></tr>
+<tr><td>Gym partners signed</td><td>12 in 90 days</td><td>Affiliate links created</td></tr>
+<tr><td>Google reviews on the InPack profile</td><td>15 by day 90</td><td>Google Business Profile</td></tr>
+<tr><td>Position for "sports performance vitamin pack"</td><td>top 3 on Google</td><td>Search Console, once connected</td></tr>
+</table></div>
+
+<h3 id="budget">Budget tiers</h3>
+<div class="tiers">
+  <div class="tier"><b>$1,500 / mo</b><span class="t">Minimum</span><ul><li>Google Search only, brand and product terms</li><li>One Meta ad set, athletes</li><li>Expect 30 to 45 leads a month</li><li>Gym program stays organic</li></ul></div>
+  <div class="tier rec"><b>$3,000 / mo</b><span class="t">Recommended</span><ul><li>All four channels as split above</li><li>Two Meta tests running at once</li><li>Expect 50 to 70 leads a month</li><li>Enough data in 6 weeks to pick winners</li></ul></div>
+  <div class="tier"><b>$6,000 / mo</b><span class="t">Aggressive</span><ul><li>Adds YouTube and Meta video with Josh</li><li>National gym outreach with paid LinkedIn</li><li>Expect 110 to 150 leads a month</li><li>Only after the store fixes and 30 days of data</li></ul></div>
+</div>
+
+<h3>Risks and mitigations</h3>
+<div class="tbl"><table>
+<tr><th>Risk</th><th>Mitigation</th></tr>
+<tr><td>Ads rejected or account flagged for health claims</td><td>Structure/function language only, disclaimer on every product page, no "diabetes" or "COVID" anywhere before launch</td></tr>
+<tr><td>Naming NBA teams without permission</td><td>Use "9 NBA teams" until written permission exists; never use logos</td></tr>
+<tr><td>Traffic lands on the wrong domain</td><td>Every ad links to the store; shop redirected before launch; www consolidated by week 12</td></tr>
+<tr><td>Leads not answered</td><td>One owner for lead follow-up, SMS within 1 hour, weekly review of unanswered leads</td></tr>
+<tr><td>Josh's time as the bottleneck</td><td>Record the pharmacist videos and FAQ answers once in week 2 and reuse them</td></tr>
+</table></div>
+
+<h3 id="next">Next steps and client decisions</h3>
+<div class="two">
+  <div class="col box"><h3>Howz does next</h3><ol>
+    <li>Ship the week-1 fixes on the store (copy delivered above)</li>
+    <li>Set up the Google Business Profile and the review request flow</li>
+    <li>Build the three Meta lead forms and the Search ad group</li>
+    <li>Reconnect once network access to the domains is granted and verify the "verify" items</li>
+  </ol></div>
+  <div class="col box"><h3>InPack decides</h3><ol>
+    <li>Confirm the budget tier and start date</li>
+    <li>Confirm the plan to consolidate www into Shopify and close shop</li>
+    <li>Confirm which SKUs are NSF Certified for Sport, with certificates</li>
+    <li>Say whether the NBA teams can be named</li>
+    <li>Send the real brand colors and logo files</li>
+    <li>Grant Search Console and Shopify access, and confirm whether the Jessica, Daavon and Forever Fit packs are real products</li>
+  </ol></div>
+</div>
+
+<div class="foot">Prepared by Howz for InPack Nutrients. Data observed on 29 September 2026. Positions are from manual searches on that date and are approximate.</div>
+</main>
+</div>
